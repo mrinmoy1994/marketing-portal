@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -149,13 +148,13 @@ public class UserController {
         }
     }
 
-    @GetMapping(value = "/image/{imageId}")
-    public ResponseEntity<?>  downloadImage(HttpServletRequest request, @PathVariable String imageId, Model model) {
+    @GetMapping(value = "/image/{imageId}", produces = "MediaType")
+    public byte[] downloadImage(HttpServletRequest request, @PathVariable String imageId) throws CustomException {
         try {
-            return ResponseEntity.ok(userService.retrieveImage(request, imageId, model));
+            return userService.retrieveImage(request, imageId);
         } catch (CustomException e) {
             log.error("Exception occur while fetching KYC details: ", e);
-            return ExceptionUtil.getExceptionResponse(e);
+            throw new CustomException("Not found");
         }
     }
 }

@@ -29,7 +29,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,7 +36,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -232,16 +230,13 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public Image retrieveImage(HttpServletRequest request, String imageId, Model model) throws CustomException {
+    public byte[] retrieveImage(HttpServletRequest request, String imageId) throws CustomException {
         Image image = imageRepository.findById(imageId).orElseThrow(() -> ExceptionUtil.getException("Wrong image id provided", "Please provide a valid image id and try again.", HttpStatus.NOT_FOUND));
         User currentUser = getCurrentUser(request);
-        if(!"ADMIN".equalsIgnoreCase(currentUser.getType()) && !currentUser.getId().equals(image.getUserId())){
+        if (!"ADMIN".equalsIgnoreCase(currentUser.getType()) && !currentUser.getId().equals(image.getUserId())) {
             throw ExceptionUtil.getException("User is no authorised for this operation", null, HttpStatus.UNAUTHORIZED);
         }
-        model.addAttribute("title", image.getName());
-        model.addAttribute("image",
-                Base64.getEncoder().encodeToString(image.getImage().getData()));
-        return image;
+        return image.getImage().getData();
     }
 
     public Optional<KYCDetails> getKycDetails(HttpServletRequest request, String userId, boolean checkRequired) throws CustomException {
