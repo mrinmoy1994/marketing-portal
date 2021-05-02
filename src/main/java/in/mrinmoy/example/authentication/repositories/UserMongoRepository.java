@@ -1,9 +1,10 @@
 package in.mrinmoy.example.authentication.repositories;
 
-import in.mrinmoy.example.authentication.model.User;
+import java.util.Optional;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.util.Optional;
+import in.mrinmoy.example.authentication.model.User;
 
 public interface UserMongoRepository extends MongoRepository<User, String> {
 

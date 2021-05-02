@@ -1,13 +1,14 @@
 package in.mrinmoy.example.authentication;
 
-import in.mrinmoy.example.authentication.service.HealthCheckService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import in.mrinmoy.example.authentication.service.HealthCheckService;
+import lombok.extern.slf4j.Slf4j;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @SpringBootApplication
@@ -31,9 +32,9 @@ public class AuthenticationApplication {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public Docket allApi() {
-//        return new Docket(DocumentationType.SWAGGER_2).select()
-//                .apis(RequestHandlerSelectors.basePackage("in.mrinmoy.example.authentication.controller")).build();
-//    }
+    // @Bean
+    // public Docket allApi() {
+    // return new Docket(DocumentationType.SWAGGER_2).select()
+    // .apis(RequestHandlerSelectors.basePackage("in.mrinmoy.example.authentication.controller")).build();
+    // }
 }

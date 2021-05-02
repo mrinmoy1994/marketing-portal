@@ -1,9 +1,10 @@
 package in.mrinmoy.example.authentication.util;
 
-import in.mrinmoy.example.authentication.exception.CustomException;
-import in.mrinmoy.example.authentication.model.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import in.mrinmoy.example.authentication.exception.CustomException;
+import in.mrinmoy.example.authentication.model.ErrorResponse;
 
 public class ExceptionUtil {
 
@@ -16,9 +17,9 @@ public class ExceptionUtil {
 
     public static ResponseEntity<?> getExceptionResponse(CustomException e) {
         return new ResponseEntity<>(ErrorResponse.builder()
-                .code(e.getHttpStatus().value())
-                .error(e.getMessage())
-                .remediation(e.getRemediation())
-                .build(), e.getHttpStatus());
+            .code(e.getHttpStatus().value())
+            .error(e.getMessage())
+            .remediation(e.getRemediation())
+            .build(), e.getHttpStatus());
     }
 }

@@ -1,14 +1,15 @@
 package in.mrinmoy.example.authentication.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.UUID;
+
 import org.bson.types.Binary;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -18,7 +19,7 @@ import java.util.UUID;
 public class Image {
     @Id
     private String id;
-    private Binary image;
+    private Binary content;
     private String name;
     private String extension;
     private String type;

@@ -12,16 +12,16 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-//@Table(name = "bankDetails")
+// @Table(name = "bankDetails")
 public class BankDetails {
-    //    @Id
-//    @Column(name = "kyc_id")
-//    private Long id;
+    // @Id
+    // @Column(name = "kyc_id")
+    // private Long id;
     private String ifscCode;
     private String accountNo;
 
-//    @OneToOne
-//    @MapsId
-//    @JoinColumn(name = "kyc_id")
-//    private KYCDetails kycDetails;
+    // @OneToOne
+    // @MapsId
+    // @JoinColumn(name = "kyc_id")
+    // private KYCDetails kycDetails;
 }

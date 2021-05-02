@@ -14,17 +14,17 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class Address {
-    //    @Id
-//    @Column(name = "kyc_id")
-//    private Long id;
+    // @Id
+    // @Column(name = "kyc_id")
+    // private Long id;
     private String baseAddress;
     private String city;
     private String state;
     private String country;
     private String pin;
 
-//    @OneToOne
-//    @MapsId
-//    @JoinColumn(name = "kyc_id")
-//    private KYCDetails kycDetails;
+    // @OneToOne
+    // @MapsId
+    // @JoinColumn(name = "kyc_id")
+    // private KYCDetails kycDetails;
 }

@@ -1,13 +1,14 @@
 package in.mrinmoy.example.authentication.model;
 
+import java.util.UUID;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -25,6 +26,9 @@ public class KYCDetails {
     private BankDetails bankDetails;
     private String panNo;
     private String aadharNo;
+    private boolean panApproved;
+    private boolean bankDetailsApproved;
+    private boolean aadharApproved;
 
     public KYCDetails() {
         this.id = UUID.randomUUID().toString();

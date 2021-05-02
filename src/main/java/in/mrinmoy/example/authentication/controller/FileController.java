@@ -1,11 +1,14 @@
 package in.mrinmoy.example.authentication.controller;
 
-import in.mrinmoy.example.authentication.exception.CustomException;
-import in.mrinmoy.example.authentication.model.MultipleFileResponse;
-import in.mrinmoy.example.authentication.model.UploadFileResponse;
-import in.mrinmoy.example.authentication.service.FileService;
-import in.mrinmoy.example.authentication.util.ExceptionUtil;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -21,17 +24,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import in.mrinmoy.example.authentication.exception.CustomException;
+import in.mrinmoy.example.authentication.model.MultipleFileResponse;
+import in.mrinmoy.example.authentication.model.UploadFileResponse;
+import in.mrinmoy.example.authentication.service.FileService;
+import in.mrinmoy.example.authentication.util.ExceptionUtil;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.DELETE, RequestMethod.GET, RequestMethod.HEAD, RequestMethod.OPTIONS, RequestMethod.PATCH, RequestMethod.POST, RequestMethod.PUT})
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.HEAD, RequestMethod.OPTIONS,
+        RequestMethod.PATCH, RequestMethod.POST, RequestMethod.PUT })
 public class FileController {
     @Autowired
     private FileService fileService;
@@ -51,20 +54,21 @@ public class FileController {
     public ResponseEntity<?> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files) {
         List<String> failedFiles = new ArrayList<>();
         List<UploadFileResponse> uploadFileResponses = Arrays.asList(files)
-                .stream()
-                .map(file -> {
-                    try {
-                        return fileService.uploadFile(file);
-                    } catch (CustomException e) {
-                        failedFiles.add(file.getName());
-                    }
-                    return null;
-                }).filter(Objects::nonNull)
-                .collect(Collectors.toList());
+            .stream()
+            .map(file -> {
+                try {
+                    return fileService.uploadFile(file);
+                } catch (CustomException e) {
+                    failedFiles.add(file.getName());
+                }
+                return null;
+            }).filter(Objects::nonNull)
+            .collect(Collectors.toList());
         if (failedFiles.isEmpty())
             return ResponseEntity.ok(uploadFileResponses);
         else
-            return new ResponseEntity<>(MultipleFileResponse.builder().failedFiles(failedFiles).uploadFileResponses(uploadFileResponses).build(), HttpStatus.MULTI_STATUS);
+            return new ResponseEntity<>(MultipleFileResponse.builder().failedFiles(failedFiles).uploadFileResponses(uploadFileResponses).build(),
+                HttpStatus.MULTI_STATUS);
     }
 
     @GetMapping("/downloadFile/{fileName:.+}")
@@ -87,13 +91,12 @@ public class FileController {
             }
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
         } catch (CustomException e) {
             e.printStackTrace();
             return ExceptionUtil.getExceptionResponse(e);
         }
     }
 }
-
