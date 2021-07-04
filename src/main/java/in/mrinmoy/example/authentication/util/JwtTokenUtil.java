@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 
 import in.mrinmoy.example.authentication.exception.CustomException;
 import in.mrinmoy.example.authentication.model.User;
-import in.mrinmoy.example.authentication.repositories.UserMongoRepository;
+import in.mrinmoy.example.authentication.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -30,7 +30,7 @@ public class JwtTokenUtil implements Serializable {
     public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
     private static final long serialVersionUID = -2550185165626007488L;
     @Autowired
-    private UserMongoRepository userRepository;
+    private UserRepository userRepository;
     @Value("${jwt.secret}")
     private String secret;
 

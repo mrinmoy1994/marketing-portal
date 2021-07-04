@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import in.mrinmoy.example.authentication.model.Token;
-import in.mrinmoy.example.authentication.repositories.TokenMongoRepository;
+import in.mrinmoy.example.authentication.repositories.TokenRepository;
 import in.mrinmoy.example.authentication.util.JwtTokenUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 
@@ -16,7 +16,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 public class HealthCheckService {
 
     @Autowired
-    TokenMongoRepository tokenRepository;
+    TokenRepository tokenRepository;
 
     @Autowired
     JwtTokenUtil jwtTokenUtil;

@@ -2,11 +2,13 @@ package in.mrinmoy.example.authentication.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import in.mrinmoy.example.authentication.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,5 +43,10 @@ public class NotificationController {
     public ResponseEntity<?> acknowledgeNotification(@RequestParam("notificationId") String notificationId) {
         notificationService.acknowledge(notificationId);
         return ResponseEntity.ok(StatusResponse.builder().status("Success").build());
+    }
+
+    @GetMapping(value = "/{id}")
+    public Notification getById(@PathVariable("id") String notificationId) throws CustomException {
+        return notificationService.getById(notificationId);
     }
 }

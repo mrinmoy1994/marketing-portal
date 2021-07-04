@@ -1,8 +1,6 @@
 package in.mrinmoy.example.authentication.model;
 
-import java.util.UUID;
-
-import org.bson.types.Binary;
+import lombok.NonNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -15,19 +13,18 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Builder
-@Document(collection = "photos")
-public class Image {
+@Document(collection = "Transaction")
+public class Transaction {
     @Id
     private String id;
-    private Binary content;
-    private String name;
-    private String extension;
-    private String type;
-    private String subType;
-    private String updatedTime;
+    @NonNull
     private String userId;
-
-    public Image() {
-        this.id = UUID.randomUUID().toString();
-    }
+    @NonNull
+    private String amount;
+    @NonNull
+    private TransactionType transactionType;
+    private CreditType creditType;
+    @NonNull
+    private String time;
+    private String transactionId;
 }

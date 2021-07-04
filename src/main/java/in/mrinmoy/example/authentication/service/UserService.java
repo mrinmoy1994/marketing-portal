@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,6 +31,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import in.mrinmoy.example.authentication.exception.CustomException;
+import in.mrinmoy.example.authentication.model.ContentType;
 import in.mrinmoy.example.authentication.model.Image;
 import in.mrinmoy.example.authentication.model.JwtRequest;
 import in.mrinmoy.example.authentication.model.KYCApprovalRequest;
@@ -44,9 +47,9 @@ import in.mrinmoy.example.authentication.model.User;
 import in.mrinmoy.example.authentication.model.UserResponse;
 import in.mrinmoy.example.authentication.model.UserType;
 import in.mrinmoy.example.authentication.repositories.ImageRepository;
-import in.mrinmoy.example.authentication.repositories.KycMongoRepository;
-import in.mrinmoy.example.authentication.repositories.TokenMongoRepository;
-import in.mrinmoy.example.authentication.repositories.UserMongoRepository;
+import in.mrinmoy.example.authentication.repositories.KycRepository;
+import in.mrinmoy.example.authentication.repositories.TokenRepository;
+import in.mrinmoy.example.authentication.repositories.UserRepository;
 import in.mrinmoy.example.authentication.util.Constants;
 import in.mrinmoy.example.authentication.util.ExceptionUtil;
 import in.mrinmoy.example.authentication.util.JwtTokenUtil;
@@ -63,15 +66,15 @@ public class UserService implements UserDetailsService {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
-    private UserMongoRepository userRepository;
+    private UserRepository userRepository;
     @Value("${jwt.secret}")
     private String secret;
     @Autowired
-    private TokenMongoRepository tokenRepository;
+    private TokenRepository tokenRepository;
     @Autowired
     private ImageRepository imageRepository;
     @Autowired
-    private KycMongoRepository kycRepository;
+    private KycRepository kycRepository;
     @Autowired
     private NotificationService notificationService;
 
@@ -84,7 +87,7 @@ public class UserService implements UserDetailsService {
         return new LoggedInUser(user);
     }
 
-    public String generateToken(JwtRequest user) throws CustomException {
+    public String generateReferralCode(JwtRequest user) throws CustomException {
         if (Objects.isNull(user) || Objects.isNull(user.getUsername()) || Objects.isNull(user.getPassword())) {
             throw ExceptionUtil.getException("\"username\" and \"password\" are required.", "Provide valid request body", HttpStatus.BAD_REQUEST);
         }
@@ -98,7 +101,7 @@ public class UserService implements UserDetailsService {
             throw ExceptionUtil.getException("username and password combination is invalid.", "Provide valid credentials", HttpStatus.UNAUTHORIZED);
         }
         String token = jwtTokenUtil.generateToken(userDetails);
-        tokenRepository.save(Token.builder().userId(userDetails.getId()).token(token).build());
+        tokenRepository.insert(Token.builder().userId(userDetails.getId()).token(token).build());
         return token;
     }
 
@@ -125,11 +128,14 @@ public class UserService implements UserDetailsService {
         user.setPassword(PasswordUtill.encrypt(user.getPassword(), secret));
         if (UserType.ADMIN.name().equalsIgnoreCase(user.getType()))
             user.setType(UserType.ADMIN.name());
-        else
+        else {
             user.setType(UserType.CUSTOMER.name());
+            user.setReferralCode(generateReferralCode());
+        }
         user.setBalance(0D);
-        user = this.userRepository.save(user);
+        user = this.userRepository.insert(user);
         notificationService.add(Notification.builder()
+                .id(UUID.randomUUID().toString())
             .userId(user.getId())
             .acknowledged(false)
             .type(NotificationType.NEW_USER.name())
@@ -174,9 +180,11 @@ public class UserService implements UserDetailsService {
             Token token = tokenRepository.findByToken(jwtToken).orElseThrow(
                 () -> ExceptionUtil.getException(Constants.INVALID_TOKEN, Constants.INVALID_TOKEN_REMEDIATION, HttpStatus.BAD_REQUEST));
             String newToken = jwtTokenUtil.generateToken(userDetails);
+//            MongoClient mongoClient = null;
+//            mongoClient.getDatabase("").getCollection("").find(BsonDocument::new);
             if (Objects.nonNull(token))
                 tokenRepository.delete(token);
-            tokenRepository.save(Token.builder().userId(userDetails.getId()).token(newToken).build());
+            tokenRepository.insert(Token.builder().userId(userDetails.getId()).token(newToken).build());
             return newToken;
         } else {
             throw ExceptionUtil.getException("JWT Token does not begin with Bearer String", "Add JWT token as Bearer Token for authentication",
@@ -194,7 +202,7 @@ public class UserService implements UserDetailsService {
             throw ExceptionUtil.getException("Wrong password provided", "Please provide correct password", HttpStatus.UNAUTHORIZED);
         encryptedPassword = PasswordUtill.encrypt(passwordChangeRequest.getNewPassword(), secret);
         userDetails.setPassword(encryptedPassword);
-        userRepository.save(userDetails);
+        userRepository.insert(userDetails);
     }
 
     public KYCDetails addKyc(HttpServletRequest request, KYCDetails kycDetails, MultipartFile pan, MultipartFile aadhar, MultipartFile bank)
@@ -210,8 +218,9 @@ public class UserService implements UserDetailsService {
                 "Address, PAN no and Bank details are mandatory, please provide these details and try again", HttpStatus.BAD_REQUEST);
         }
 
-        KYCDetails currentKYCDetails = getKycDetails(request, String.valueOf(userDetails.getId()), false).orElse(null);
+        KYCDetails currentKYCDetails = getKycDetails(String.valueOf(userDetails.getId())).orElse(null);
         Notification notification = Notification.builder()
+                .id(UUID.randomUUID().toString())
             .alertTitle(Constants.KYC_REQUEST_MESSAGE)
             .type(NotificationType.KYC_REQUEST.name())
             .userId(userDetails.getId())
@@ -227,18 +236,18 @@ public class UserService implements UserDetailsService {
             notificationService.add(notification, false);
         } else {
             if (Objects.nonNull(aadhar)) {
-                currentKYCDetails.setAadharImageId(saveImage(aadhar, "AADHAR", userDetails.getId()));
+                currentKYCDetails.setAadharImageId(saveImage(aadhar, ContentType.AADHAR.name(), userDetails.getId()));
                 currentKYCDetails.setAadharApproved(false);
                 currentKYCDetails.setAadharNo(kycDetails.getAadharNo());
                 currentKYCDetails.setAddress(kycDetails.getAddress());
             }
             if (Objects.nonNull(bank)) {
-                currentKYCDetails.setBankImageId(saveImage(bank, "BANK", userDetails.getId()));
+                currentKYCDetails.setBankImageId(saveImage(bank, ContentType.BANK.name(), userDetails.getId()));
                 currentKYCDetails.setBankDetailsApproved(false);
                 currentKYCDetails.setBankDetails(kycDetails.getBankDetails());
             }
             if (Objects.nonNull(pan)) {
-                currentKYCDetails.setPanImageId(saveImage(pan, "PAN", userDetails.getId()));
+                currentKYCDetails.setPanImageId(saveImage(pan, ContentType.PAN.name(), userDetails.getId()));
                 currentKYCDetails.setPanApproved(false);
                 currentKYCDetails.setBankDetails(kycDetails.getBankDetails());
             }
@@ -255,9 +264,9 @@ public class UserService implements UserDetailsService {
             dbImage.setContent(new Binary(BsonBinarySubType.BINARY, imgFile.getBytes()));
             dbImage.setExtension(imgFile.getContentType());
             dbImage.setType(type);
-            dbImage.setUpdatedTime(Instant.now().getEpochSecond());
+            dbImage.setUpdatedTime(Instant.now().toString());
             dbImage.setUserId(userId);
-            return imageRepository.save(dbImage).getId();
+            return imageRepository.insert(dbImage).getId();
 
         } catch (Exception e) {
             log.error("Failed to save image : {}", imgFile.getName(), e);
@@ -275,16 +284,16 @@ public class UserService implements UserDetailsService {
         return image.getContent().getData();
     }
 
-    public Optional<KYCDetails> getKycDetails(HttpServletRequest request, String userId, boolean checkRequired) throws CustomException {
-        if (checkRequired) {
-            User currentUser = jwtTokenUtil.getCurrentUser(request);
-
-            if (UserType.CUSTOMER.name().equalsIgnoreCase(currentUser.getType())) {
-                log.error("required type : ADMIN, provided : {}", currentUser.getType());
-                throw ExceptionUtil.getException(Constants.UNAUTHORISED_ERROR, Constants.UNAUTHORISED_REMEDIATION,
-                    HttpStatus.UNAUTHORIZED);
-            }
-        }
+    public Optional<KYCDetails> getKycDetails(String userId) throws CustomException {
+//        if (checkRequired) {
+//            User currentUser = jwtTokenUtil.getCurrentUser(request);
+//
+//            if (UserType.CUSTOMER.name().equalsIgnoreCase(currentUser.getType())) {
+//                log.error("required type : ADMIN, provided : {}", currentUser.getType());
+//                throw ExceptionUtil.getException(Constants.UNAUTHORISED_ERROR, Constants.UNAUTHORISED_REMEDIATION,
+//                    HttpStatus.UNAUTHORIZED);
+//            }
+//        }
         userRepository.findById(userId).orElseThrow(
             () -> ExceptionUtil.getException(Constants.INVALID_USER_ID, Constants.INVALID_USER_ID_REMEDIATION, HttpStatus.BAD_REQUEST));
         return kycRepository.findByUserId(userId);
@@ -308,23 +317,24 @@ public class UserService implements UserDetailsService {
             .content(userResponseList).build();
     }
 
-    public StatusResponse approveKYC(HttpServletRequest request, KYCApprovalRequest approvalRequest) throws CustomException {
+    public StatusResponse approveKYC(KYCApprovalRequest approvalRequest) throws CustomException {
         String message = "";
-        KYCDetails kycDetails = getKycDetails(request, approvalRequest.getUserId(), true).orElseThrow(
+        KYCDetails kycDetails = getKycDetails(approvalRequest.getUserId()).orElseThrow(
             () -> ExceptionUtil.getException("KYC details is not uploaded for the requested user", "Please ask user to upload the KYC details first.",
                 HttpStatus.NOT_FOUND));
 
         kycDetails.setPanApproved(approvalRequest.isPanVerified());
         kycDetails.setBankDetailsApproved(approvalRequest.isBankDetailsVerified());
         kycDetails.setAadharApproved(approvalRequest.isAddressVerified());
-        kycDetails = kycRepository.save(kycDetails);
+        kycDetails = kycRepository.insert(kycDetails);
 
         if (kycDetails.isPanApproved() && kycDetails.isBankDetailsApproved() && kycDetails.isAadharApproved()) {
             User user = userRepository.findById(approvalRequest.getUserId()).orElse(null);
             if (Objects.nonNull(user)) {
                 user.setVerified(true);
-                userRepository.save(user);
+                userRepository.insert(user);
                 notificationService.add(Notification.builder()
+                        .id(UUID.randomUUID().toString())
                     .ownerType(UserType.CUSTOMER.name())
                     .updateTime(Instant.now().toString())
                     .acknowledged(false)
@@ -352,5 +362,19 @@ public class UserService implements UserDetailsService {
                 .alertTitle(Constants.KYC_REJECTED_MESSAGE).build(), true);
         }
         return StatusResponse.builder().status(message).build();
+    }
+
+
+    public String generateReferralCode() {
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 10;
+        Random random = new Random();
+
+        return random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
     }
 }

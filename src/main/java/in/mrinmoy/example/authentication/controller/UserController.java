@@ -31,7 +31,7 @@ import in.mrinmoy.example.authentication.model.StatusResponse;
 import in.mrinmoy.example.authentication.model.User;
 import in.mrinmoy.example.authentication.model.UserResponse;
 import in.mrinmoy.example.authentication.repositories.ImageRepository;
-import in.mrinmoy.example.authentication.repositories.UserMongoRepository;
+import in.mrinmoy.example.authentication.repositories.UserRepository;
 import in.mrinmoy.example.authentication.service.FileService;
 import in.mrinmoy.example.authentication.service.UserService;
 import in.mrinmoy.example.authentication.util.ExceptionUtil;
@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
         RequestMethod.PATCH, RequestMethod.POST, RequestMethod.PUT })
 public class UserController {
     @Autowired
-    private UserMongoRepository userRepository;
+    private UserRepository userRepository;
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
@@ -60,7 +60,7 @@ public class UserController {
     @PostMapping(value = "/authenticate")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) {
         try {
-            String token = userService.generateToken(authenticationRequest);
+            String token = userService.generateReferralCode(authenticationRequest);
             return ResponseEntity.ok(new JwtResponse(token));
         } catch (CustomException e) {
             log.error("Exception occur while logging in: ", e);
@@ -148,9 +148,9 @@ public class UserController {
     }
 
     @GetMapping(value = "/getKYCDetails")
-    public ResponseEntity<?> getKYCDetails(HttpServletRequest request, @RequestParam("userId") String userId) {
+    public ResponseEntity<?> getKYCDetails(@RequestParam("userId") String userId) {
         try {
-            return ResponseEntity.ok(userService.getKycDetails(request, userId, true).orElseThrow(
+            return ResponseEntity.ok(userService.getKycDetails(userId).orElseThrow(
                 () -> ExceptionUtil.getException("KYC is not updated for the given user.",
                     "Please upload KYC details for the given user first and try again", HttpStatus.BAD_REQUEST)));
         } catch (CustomException e) {
@@ -172,7 +172,7 @@ public class UserController {
     @PostMapping(value = "/approveKYC")
     public ResponseEntity<?> approveKYC(HttpServletRequest request, @RequestBody KYCApprovalRequest approvalRequest) {
         try {
-            return ResponseEntity.ok(userService.approveKYC(request, approvalRequest));
+            return ResponseEntity.ok(userService.approveKYC(approvalRequest));
         } catch (CustomException e) {
             log.error("Exception occur while approving KYC details : ", e);
             return ExceptionUtil.getExceptionResponse(e);

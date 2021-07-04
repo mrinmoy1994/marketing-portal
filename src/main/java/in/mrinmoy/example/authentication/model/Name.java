@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-//@Entity
 @Getter
 @Setter
 @AllArgsConstructor
@@ -14,8 +13,4 @@ public class Name {
     private String firstName;
     private String middleName;
     private String lastName;
-
-    public Name() {
-        // this.id = UUID.randomUUID().toString();
-    }
 }

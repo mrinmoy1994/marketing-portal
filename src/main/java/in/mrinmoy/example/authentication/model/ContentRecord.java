@@ -2,32 +2,28 @@ package in.mrinmoy.example.authentication.model;
 
 import java.util.UUID;
 
-import org.bson.types.Binary;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import nonapi.io.github.classgraph.json.Id;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @Builder
-@Document(collection = "photos")
-public class Image {
+@Document(collection = "ContentRecord")
+public class ContentRecord {
     @Id
     private String id;
-    private Binary content;
-    private String name;
-    private String extension;
-    private String type;
-    private String subType;
-    private String updatedTime;
+    private String contentId;
+    private String clientIp;
     private String userId;
+    private String seenTime;
 
-    public Image() {
+    public ContentRecord() {
         this.id = UUID.randomUUID().toString();
     }
 }

@@ -20,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import in.mrinmoy.example.authentication.exception.CustomException;
 import in.mrinmoy.example.authentication.model.Token;
-import in.mrinmoy.example.authentication.repositories.TokenMongoRepository;
+import in.mrinmoy.example.authentication.repositories.TokenRepository;
 import in.mrinmoy.example.authentication.util.ExceptionUtil;
 import in.mrinmoy.example.authentication.util.JwtTokenUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -34,7 +34,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
-    private TokenMongoRepository tokenRepository;
+    private TokenRepository tokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
